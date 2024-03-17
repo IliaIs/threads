@@ -43,9 +43,7 @@ public class Main {
         int maxInterval = 0;
         for (Future<?> task : tasks) {
             int interval = (int) task.get();
-            if (maxInterval < interval) {
-                maxInterval = interval;
-            }
+            maxInterval = Math.max(maxInterval, interval);
         }
         System.out.println("Максимальный интервал значений: " + maxInterval);
         threadPool.shutdown();
