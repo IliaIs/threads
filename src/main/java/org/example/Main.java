@@ -1,18 +1,20 @@
 package org.example;
 
 import java.util.*;
+import java.util.concurrent.*;
 
 public class Main {
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException, ExecutionException {
         String[] texts = new String[25];
-        List<Thread> threads = new ArrayList<>();
+        List<Future<?>> tasks = new ArrayList<>();
+        ExecutorService threadPool = Executors.newFixedThreadPool(texts.length);
         for (int i = 0; i < texts.length; i++) {
             texts[i] = generateText("aab", 30_000);
         }
         long startTsThread = System.currentTimeMillis();
         for (String text : texts) {
-            Thread thread = new Thread(() -> {
+            Future<?> task = threadPool.submit(() -> {
                 int maxSize = 0;
                 for (int i = 0; i < text.length(); i++) {
                     for (int j = 0; j < text.length(); j++) {
@@ -32,16 +34,21 @@ public class Main {
                     }
                 }
                 System.out.println(text.substring(0, 100) + " -> " + maxSize);
+                return maxSize;
             });
-            thread.start();
-            threads.add(thread);
-        }
-        for (Thread thread : threads) {
-            thread.join();
+            tasks.add(task);
         }
         long endTsThread = System.currentTimeMillis(); // end time
-
         System.out.println("Time Threads: " + (endTsThread - startTsThread) + "ms");
+        int maxInterval = 0;
+        for (Future<?> task : tasks) {
+            int interval = (int) task.get();
+            if (maxInterval < interval) {
+                maxInterval = interval;
+            }
+        }
+        System.out.println("Максимальный интервал значений: " + maxInterval);
+        threadPool.shutdown();
 
 //        long startTs = System.currentTimeMillis(); // start time
 //        for (String text : texts) {
